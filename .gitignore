@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Fetched Wikipedia articles
+lab6/wikiarticles

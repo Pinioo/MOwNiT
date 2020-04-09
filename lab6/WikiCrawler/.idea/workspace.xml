@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="7b767579-a9fa-48e7-96a1-a818012543bd" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CodeStyleSettingsInfer">
+    <option name="done" value="true" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="1" />
+  </component>
+  <component name="ProjectId" id="1aIqeohhyVLtmIVG2s9bhXQdSIN" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+  </component>
+  <component name="SbtLocalSettings">
+    <option name="availableProjects">
+      <map>
+        <entry>
+          <key>
+            <ExternalProjectPojo>
+              <option name="name" value="WikiCrawler" />
+              <option name="path" value="$PROJECT_DIR$" />
+            </ExternalProjectPojo>
+          </key>
+          <value>
+            <list>
+              <ExternalProjectPojo>
+                <option name="name" value="wikicrawler [file:/home/pinio/IdeaProjects/Scala/WikiCrawler/]" />
+                <option name="path" value="$PROJECT_DIR$" />
+              </ExternalProjectPojo>
+              <ExternalProjectPojo>
+                <option name="name" value="WikiCrawler-build" />
+                <option name="path" value="$PROJECT_DIR$/project" />
+              </ExternalProjectPojo>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="modificationStamps">
+      <map>
+        <entry key="$PROJECT_DIR$/build.sbt" value="75519766" />
+        <entry key="$PROJECT_DIR$/project/build.properties" value="1026143456" />
+      </map>
+    </option>
+    <option name="projectSyncType">
+      <map>
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter1-hello" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter2-calc" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter2-csv" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter3-todo-form" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter3-todo-view" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter4-lights" value="PREVIEW" />
+        <entry key="$PROJECT_DIR$/../essential-play-code/chapter4-macro" value="PREVIEW" />
+      </map>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7b767579-a9fa-48e7-96a1-a818012543bd" name="Default Changelist" comment="" />
+      <created>1586433553893</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1586433553893</updated>
+      <workItem from="1586433557792" duration="14567000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="555" y="214" width="800" height="677" key="#Project_Structure" timestamp="1586433574583">
+      <screen x="0" y="25" width="1920" height="1055" />
+    </state>
+    <state x="555" y="214" width="800" height="677" key="#Project_Structure/0.25.1920.1055@0.25.1920.1055" timestamp="1586433574583" />
+    <state x="644" y="344" width="621" height="416" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1586439780931">
+      <screen x="0" y="25" width="1920" height="1055" />
+    </state>
+    <state x="644" y="344" width="621" height="416" key="#com.intellij.fileTypes.FileTypeChooser/0.25.1920.1055@0.25.1920.1055" timestamp="1586439780931" />
+    <state x="624" y="253" key="run.anything.popup" timestamp="1586437528270">
+      <screen x="0" y="25" width="1920" height="1055" />
+    </state>
+    <state x="624" y="253" key="run.anything.popup/0.25.1920.1055@0.25.1920.1055" timestamp="1586437528270" />
+    <state x="623" y="257" width="672" height="678" key="search.everywhere.popup" timestamp="1586446290231">
+      <screen x="0" y="25" width="1920" height="1055" />
+    </state>
+    <state x="623" y="257" width="672" height="678" key="search.everywhere.popup/0.25.1920.1055@0.25.1920.1055" timestamp="1586446290231" />
+  </component>
+</project>
