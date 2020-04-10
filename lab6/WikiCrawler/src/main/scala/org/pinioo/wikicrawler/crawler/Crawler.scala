@@ -1,7 +1,7 @@
 package org.pinioo.wikicrawler.crawler
 
 import java.io.{File, FileWriter}
-import java.util.concurrent.CompletionStage
+import java.util.concurrent.TimeUnit
 
 import play.libs.ws.ahc.StandaloneAhcWSClient
 import play.libs.ws.JsonBodyReadables.instance.json
@@ -11,53 +11,97 @@ import com.fasterxml.jackson.databind.JsonNode
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 
+import scala.collection.mutable
+import scala.concurrent.{Await, Future}
 import scala.jdk.CollectionConverters._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success, Try}
+
+
 
 case object Crawler extends App {
-  def getRandomTitles(n: Int)(implicit ws: StandaloneAhcWSClient): Seq[String] = {
-    val iters = n / 500 + 1
-    val toGetInIter = n / iters
+  val jsonMap = mutable.HashMap[String, JsonNode]()
+
+  def getRandomPageIDs(n: Int)(implicit ws: StandaloneAhcWSClient): Seq[String] = {
+    var toGetInIter = List[Int]()
+    var left = n
+
+    while(left > 0){
+      if(left > 500)
+        toGetInIter = 500 +: toGetInIter
+      else
+        toGetInIter = left +: toGetInIter
+      left -= toGetInIter.head
+    }
+
     for {
-      _ <- 1 to iters
-      i <- ws.url(s"https://en.wikipedia.org/w/api.php?format=json&action=query&generator=random&grnnamespace=0&grnlimit=${toGetInIter}").get.thenApply[JsonNode] {
+      generatorLimit <- toGetInIter
+      i <- ws.url(s"https://en.wikipedia.org/w/api.php?format=json&action=query&generator=random&grnnamespace=0&grnlimit=${generatorLimit}").get.thenApply[JsonNode] {
         _
           .getBody(json())
           .at("/query/pages")
-      }.toCompletableFuture.get.elements.asScala.map(_.at("/title").asText.replace(' ', '_'))
+      }.toCompletableFuture.get.elements.asScala.map(_.at("/pageid").asText)
     } yield i
   }
 
-  def saveWikiArticle(title: String, text: String)(dir: Option[String]): Unit = {
-    var directoryPath: String = ""
-
-    dir match {
-      case Some(path) =>
-        directoryPath = path
-        val dirFile = new File(path)
-        if (!dirFile.isDirectory)
-          dirFile.mkdir()
-      case None =>
-        directoryPath = "."
+  def getPageBody(pageid: String)(implicit ws: StandaloneAhcWSClient): JsonNode = {
+    if(!jsonMap.contains(pageid)) {
+      val url = s"https://en.wikipedia.org/w/api.php?action=parse&pageid=${pageid}&prop=wikitext&formatversion=2&format=json"
+      jsonMap.addOne(pageid -> ws.url(url).get().thenApply[JsonNode] {
+        _
+          .getBody(json())
+      }.toCompletableFuture.get)
     }
+    jsonMap(pageid)
+  }
 
-    val f = new File(s"${directoryPath}/${title}.txt")
-    if(!f.exists()) {
-      f.createNewFile()
-      val fw = new FileWriter(f)
-      fw.write(text)
-      fw.close()
+  def saveWikiArticle(pageid: String, text: String)(dir: Option[String])(implicit ws: StandaloneAhcWSClient): Unit = {
+    getPageBody(pageid).getWikititleOpt match {
+      case Some(title) =>
+        var directoryPath: String = ""
+        dir match {
+          case Some(path) =>
+            directoryPath = path
+            val dirFile = new File(path)
+            if (!dirFile.isDirectory)
+              dirFile.mkdir()
+          case None =>
+            directoryPath = "."
+        }
+
+        val f = new File(s"${directoryPath}/${title.replace('/', '_')}.txt")
+        if(!f.exists()) {
+          Try{
+            f.createNewFile()
+            val fw = new FileWriter(f)
+            fw.write(text)
+            fw.close()
+          } match {
+            case Success(_) =>
+              ()
+            case Failure(e) =>
+              println(f.getAbsolutePath + " caused problems:")
+              println(e.getMessage)
+              println("-----------------------------")
+          }
+        }
+      case None => ()
     }
   }
 
-  def crawl(title: String)(implicit ws: StandaloneAhcWSClient): CompletionStage[String] = {
-    val url = s"https://en.wikipedia.org/w/api.php?action=parse&page=${title}&prop=wikitext&formatversion=2&format=json"
+  def crawl(pageid: String)(implicit ws: StandaloneAhcWSClient): String = {
+    val result = getPageBody(pageid)
+      .getWikitextOpt
+      .map {
+        _
+          .replaceAll("[^A-Za-z0-9]", " ")
+          .replaceAll(" +", " ")
+      }
+      .getOrElse("")
 
-    ws.url(url).get().thenApply[String] {
-      _
-        .getBody(json())
-        .at("/parse/wikitext")
-        .asText()
-    }
+    if(result.length > 5000) result.substring(0, 5000)
+    else result
   }
 
   def getRandomArticles(n: Int)(dir: Option[String] = None): Unit = {
@@ -68,24 +112,21 @@ case object Crawler extends App {
     val asyncHttpClientConfig = new DefaultAsyncHttpClientConfig.Builder().setMaxRequestRetry(0).setShutdownQuietPeriod(0).setShutdownTimeout(0).build
     val asyncHttpClient = new DefaultAsyncHttpClient(asyncHttpClientConfig)
 
-    implicit val client = new StandaloneAhcWSClient(asyncHttpClient, materializer)
+    implicit val client: StandaloneAhcWSClient = new StandaloneAhcWSClient(asyncHttpClient, materializer)
 
-    var counter = 0;
-
-    for(title <- getRandomTitles(n)){
-      crawl(title).thenAccept(saveWikiArticle(title, _)(dir)).thenAccept(_ => counter += 1)
-    }
-
-    while(counter < n){
-      Thread.sleep(1000)
-    }
+    Await.result(Future.sequence(getRandomPageIDs(n).map{
+      pageid => Future{
+        val wikitext = crawl(pageid)
+        saveWikiArticle(pageid, wikitext)(dir)
+      }
+    }), Duration(500*n, TimeUnit.MILLISECONDS))
 
     system.terminate()
     client.close()
   }
 
   if(args.length < 1)
-    throw new Exception
+    throw new IndexOutOfBoundsException("Articles quantity must be provided")
 
   val articlesToFind = args(0).toInt
   val pathToSave =
@@ -94,5 +135,22 @@ case object Crawler extends App {
     else
       Some(args(1))
 
+  implicit class WikiNode(jsonNode: JsonNode){
+    def getWikitextOpt: Option[String] = {
+      if(jsonNode.has("parse") && jsonNode.at("/parse").has("wikitext"))
+        Some(jsonNode.at("/parse/wikitext").asText())
+      else
+        None
+    }
+
+    def getWikititleOpt: Option[String] = {
+      if(jsonNode.has("parse") && jsonNode.at("/parse").has("title"))
+        Some(jsonNode.at("/parse/title").asText().replace(' ', '_'))
+      else
+        None
+    }
+  }
+
   getRandomArticles(articlesToFind)(pathToSave)
 }
+

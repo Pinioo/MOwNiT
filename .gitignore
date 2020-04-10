@@ -130,3 +130,8 @@ dmypy.json
 
 # Fetched Wikipedia articles
 lab6/wikiarticles
+lab6/wikiarticles_2
+
+# WikiCrawler build
+lab6/WikiCrawler/target
+lab6/WikiCrawler/project
