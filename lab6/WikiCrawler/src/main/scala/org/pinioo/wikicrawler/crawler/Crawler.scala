@@ -1,7 +1,7 @@
 package org.pinioo.wikicrawler.crawler
 
 import java.io.{File, FileWriter}
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Executors, ThreadPoolExecutor, TimeUnit}
 
 import play.libs.ws.ahc.StandaloneAhcWSClient
 import play.libs.ws.JsonBodyReadables.instance.json
@@ -12,9 +12,8 @@ import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClient
 import play.shaded.ahc.org.asynchttpclient.DefaultAsyncHttpClientConfig
 
 import scala.collection.mutable
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.jdk.CollectionConverters._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
@@ -22,6 +21,11 @@ import scala.util.{Failure, Success, Try}
 
 case object Crawler extends App {
   val jsonMap = mutable.HashMap[String, JsonNode]()
+
+  val executorService = Executors.newFixedThreadPool(1000);
+
+  implicit val executionContext: ExecutionContextExecutorService = ExecutionContext.fromExecutorService( executorService )
+
 
   def getRandomPageIDs(n: Int)(implicit ws: StandaloneAhcWSClient): Seq[String] = {
     var toGetInIter = List[Int]()
@@ -45,19 +49,29 @@ case object Crawler extends App {
     } yield i
   }
 
-  def getPageBody(pageid: String)(implicit ws: StandaloneAhcWSClient): JsonNode = {
+  def getPageBody(pageid: String)(implicit ws: StandaloneAhcWSClient): Option[JsonNode] = {
     if(!jsonMap.contains(pageid)) {
       val url = s"https://en.wikipedia.org/w/api.php?action=parse&pageid=${pageid}&prop=wikitext&formatversion=2&format=json"
-      jsonMap.addOne(pageid -> ws.url(url).get().thenApply[JsonNode] {
-        _
-          .getBody(json())
-      }.toCompletableFuture.get)
+      Try {
+        jsonMap.addOne(pageid -> ws.url(url).get().thenApply[JsonNode] {
+          _
+            .getBody(json())
+        }.toCompletableFuture.get)
+      } match {
+        case Success(_) =>
+          ()
+        case Failure(_) =>
+          println(s"Wikimedia error for ID: ${pageid}")
+      }
     }
-    jsonMap(pageid)
+    if(jsonMap.contains(pageid))
+      Some(jsonMap(pageid))
+    else
+      None
   }
 
-  def saveWikiArticle(pageid: String, text: String)(dir: Option[String])(implicit ws: StandaloneAhcWSClient): Unit = {
-    getPageBody(pageid).getWikititleOpt match {
+  def saveWikiArticle(pageid: String, text: String)(dir: Option[String])(implicit ws: StandaloneAhcWSClient): Int = {
+    getPageBody(pageid).map(_.getWikititleOpt match {
       case Some(title) =>
         var directoryPath: String = ""
         dir match {
@@ -72,36 +86,45 @@ case object Crawler extends App {
 
         val f = new File(s"${directoryPath}/${title.replace('/', '_')}.txt")
         if(!f.exists()) {
-          Try{
+          Try {
             f.createNewFile()
             val fw = new FileWriter(f)
             fw.write(text)
             fw.close()
           } match {
             case Success(_) =>
-              ()
+              1
             case Failure(e) =>
               println(f.getAbsolutePath + " caused problems:")
               println(e.getMessage)
               println("-----------------------------")
+              0
           }
-        }
-      case None => ()
-    }
+        } else 0
+      case None =>
+        println(s"Failed to get content of page with ID: ${pageid}")
+        0
+    }).getOrElse(0)
   }
 
-  def crawl(pageid: String)(implicit ws: StandaloneAhcWSClient): String = {
-    val result = getPageBody(pageid)
-      .getWikitextOpt
+  def crawl(pageid: String)(implicit ws: StandaloneAhcWSClient): Option[String] = {
+    getPageBody(pageid)
       .map {
-        _
-          .replaceAll("[^A-Za-z0-9]", " ")
-          .replaceAll(" +", " ")
+      _.getWikitextOpt
+        .map {
+          _
+            .replaceAll("[^A-Za-z0-9]", " ")
+            .replaceAll(" +", " ")
+        }
+        .getOrElse("")
+      }.map {
+      result => {
+        if (result.length > 5000)
+          result.substring(0, 5000)
+        else
+          result
+        }
       }
-      .getOrElse("")
-
-    if(result.length > 5000) result.substring(0, 5000)
-    else result
   }
 
   def getRandomArticles(n: Int)(dir: Option[String] = None): Unit = {
@@ -114,12 +137,32 @@ case object Crawler extends App {
 
     implicit val client: StandaloneAhcWSClient = new StandaloneAhcWSClient(asyncHttpClient, materializer)
 
-    Await.result(Future.sequence(getRandomPageIDs(n).map{
-      pageid => Future{
-        val wikitext = crawl(pageid)
-        saveWikiArticle(pageid, wikitext)(dir)
+    var left = n
+    while(left > 0) {
+      println(s"${left} left")
+      val toGen = if(left > 1000) 1000 else left
+      Await.ready(Future.sequence(getRandomPageIDs(toGen).map {
+        pageid =>
+          Future {
+            crawl(pageid).map {
+              saveWikiArticle(pageid, _)(dir)
+            }.getOrElse(0)
+          }
+      }), Duration(50 * toGen, TimeUnit.MILLISECONDS)).value.get match {
+        case Failure(e) =>
+          e.printStackTrace()
+        case Success(s) =>
+          println(s"Generated ${s.sum}")
+          left -= s.sum
       }
-    }), Duration(500*n, TimeUnit.MILLISECONDS))
+      if (left > 0) {
+        println("Waiting 5s")
+        Thread.sleep(5000)
+      }
+      else
+        println("Done")
+    }
+    executionContext.shutdown()
 
     system.terminate()
     client.close()
@@ -137,17 +180,21 @@ case object Crawler extends App {
 
   implicit class WikiNode(jsonNode: JsonNode){
     def getWikitextOpt: Option[String] = {
-      if(jsonNode.has("parse") && jsonNode.at("/parse").has("wikitext"))
-        Some(jsonNode.at("/parse/wikitext").asText())
-      else
-        None
+      Try {
+        jsonNode.at("/parse/wikitext").asText()
+      } match {
+        case Success(s) => Some(s)
+        case Failure(_) => None
+      }
     }
 
     def getWikititleOpt: Option[String] = {
-      if(jsonNode.has("parse") && jsonNode.at("/parse").has("title"))
-        Some(jsonNode.at("/parse/title").asText().replace(' ', '_'))
-      else
-        None
+      Try {
+        jsonNode.at("/parse/title").asText().replace(' ', '_')
+      } match {
+        case Success(s) => Some(s)
+        case Failure(_) => None
+      }
     }
   }
 
