@@ -168,16 +168,6 @@ case object Crawler extends App {
     client.close()
   }
 
-  if(args.length < 1)
-    throw new IndexOutOfBoundsException("Articles quantity must be provided")
-
-  val articlesToFind = args(0).toInt
-  val pathToSave =
-    if(args.length < 2)
-      None
-    else
-      Some(args(1))
-
   implicit class WikiNode(jsonNode: JsonNode){
     def getWikitextOpt: Option[String] = {
       Try {
@@ -197,6 +187,16 @@ case object Crawler extends App {
       }
     }
   }
+
+  if(args.length < 1)
+    throw new IndexOutOfBoundsException("Articles quantity must be provided")
+
+  val articlesToFind = args(0).toInt
+  val pathToSave =
+    if(args.length < 2)
+      None
+    else
+      Some(args(1))
 
   getRandomArticles(articlesToFind)(pathToSave)
 }

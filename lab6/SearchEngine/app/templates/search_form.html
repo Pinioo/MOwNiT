@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Die Brille</title>
+</head>
+<body>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            I am looking for: {{ form.query(size=32) }}
+        </p>
+        <p>
+            Show me {{ form.results(size=2) }} best matches
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    <hr>
+    {% block content %}{% endblock %}
+</body>
+</html>

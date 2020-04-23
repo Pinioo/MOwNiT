@@ -1,0 +1,24 @@
+{% extends "search_form.html" %}
+
+{% block content %}
+    <h2>IDF + SVD search results</h2>
+    <li>
+        {% for result in results_svd %}
+        <ul>{{ result[0] }} - {{ result[1] }}</ul>
+        {% endfor %}
+    </li>
+
+    <h2>IDF search results</h2>
+    <li>
+        {% for result in results_normed %}
+        <ul>{{ result[0] }} - {{ result[1] }}</ul>
+        {% endfor %}
+    </li>
+
+    <h2>Not processed search results</h2>
+    <li>
+        {% for result in results_noidf %}
+        <ul>{{ result[0] }} - {{ result[1] }}</ul>
+        {% endfor %}
+    </li>
+{% endblock %}
