@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7b767579-a9fa-48e7-96a1-a818012543bd" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../SVDSearchEngine.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../SVDSearchEngine.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/org/pinioo/wikicrawler/crawler/Crawler.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/org/pinioo/wikicrawler/crawler/Crawler.scala" afterDir="false" />
-    </list>
+    <list default="true" id="7b767579-a9fa-48e7-96a1-a818012543bd" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -97,6 +93,7 @@
       <workItem from="1586433557792" duration="14567000" />
       <workItem from="1587237750634" duration="7000" />
       <workItem from="1587237879833" duration="634000" />
+      <workItem from="1588843788150" duration="29000" />
     </task>
     <servers />
   </component>
@@ -112,6 +109,10 @@
       <screen x="0" y="25" width="1920" height="1055" />
     </state>
     <state x="644" y="344" width="621" height="416" key="#com.intellij.fileTypes.FileTypeChooser/0.25.1920.1055@0.25.1920.1055" timestamp="1586439780931" />
+    <state x="269" y="279" width="1372" height="547" key="new project wizard" timestamp="1588843813542">
+      <screen x="0" y="25" width="1920" height="1055" />
+    </state>
+    <state x="269" y="279" width="1372" height="547" key="new project wizard/0.25.1920.1055/1920.0.1920.1080@0.25.1920.1055" timestamp="1588843813542" />
     <state x="624" y="253" key="run.anything.popup" timestamp="1586437528270">
       <screen x="0" y="25" width="1920" height="1055" />
     </state>
