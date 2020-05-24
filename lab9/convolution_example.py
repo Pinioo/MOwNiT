@@ -1,25 +1,24 @@
 import numpy as np
-import scipy.signal as signal
 from numpy.fft import fft2, ifft2
 import matplotlib.pyplot as plt
 import PIL.Image
 import PIL.ImageDraw
 from PIL.ImageOps import invert
 from skimage.feature import peak_local_max
-import itertools
+import cv2
 
-# phases = [[cmath.phase(x) for x in dftimg[i]] for i in range(len(dftimg))]
-# phases = phases/np.max(np.array(phases))*255
-# imageio.imwrite("phases.jpg", np.array(255 - phases))
-# absvals = np.abs(dftimg)
-# absvals = absvals/np.max(np.array(absvals))*255
+def convolute(im, pattern, plotting=False):
+    img_dft = fft2(im)
+    if plotting:
+        plt.imshow(np.abs(img_dft))
+        plt.show()
+        plt.imshow(np.angle(img_dft))
+        plt.show()
+    pattern_dft = fft2(np.rot90(pattern, 2), im.shape)
 
-# imageio.imwrite("abs.jpg", np.array(255 - absvals))
+    return np.real(ifft2(img_dft * pattern_dft))
 
-def convulate(im, pattern):
-    return np.real(ifft2(fft2(im) * fft2(np.rot90(pattern, 2), (im.shape[0], im.shape[1]))))
-
-def print_dots(in_img_file, in_pattern_file, out_file, threshold=0.9, channels="rgb", inv = True):
+def find_pattern(in_img_file, in_pattern_file, out_file=None, threshold=0.9, channels="rgb", inv = True, outline="red", plotting=False):
     img = PIL.Image.open(in_img_file).convert("RGB")
 
     if inv:
@@ -36,21 +35,29 @@ def print_dots(in_img_file, in_pattern_file, out_file, threshold=0.9, channels="
     pattern_arr = np.asarray(pattern)
     pattern_r, pattern_g, pattern_b = pattern_arr[:,:,0], pattern_arr[:,:,1], pattern_arr[:,:,2]
 
-    img_r = convulate(img_r, pattern_r)
-    img_g = convulate(img_g, pattern_g)
-    img_b = convulate(img_b, pattern_b)
+    conv_sum = np.zeros(img_r.shape)
 
-    rgbs = np.zeros(np.shape(img_r))
     if 'r' in channels:
-        rgbs += img_r
+        if plotting:
+            print("Red channel DFT abs and phase")
+        conv_sum += convolute(img_r/255, pattern_r/255, plotting)
     if 'g' in channels:
-        rgbs += img_g
+        if plotting:
+            print("Green channel DFT abs and phase")
+        conv_sum += convolute(img_g/255, pattern_g/255, plotting)
     if 'b' in channels:
-        rgbs += img_b
+        if plotting:
+            print("Blue channel DFT abs and phase")
+        conv_sum += convolute(img_b/255, pattern_b/255, plotting)
 
-    convulation_lows = rgbs < threshold * np.max(rgbs)
-    rgbs[convulation_lows] = 0
-    found_max_coords = peak_local_max(rgbs)
+    if plotting:
+        print("Convolutions sum")
+        plt.imshow(conv_sum)
+        plt.show()
+
+    convolution_lows = conv_sum < threshold * np.max(conv_sum)
+    conv_sum[convolution_lows] = 0
+    found_max_coords = peak_local_max(conv_sum)
 
     original_img = PIL.Image.open(in_img_file)
     draw = PIL.ImageDraw.Draw(original_img)
@@ -59,10 +66,9 @@ def print_dots(in_img_file, in_pattern_file, out_file, threshold=0.9, channels="
     pattern_height = pattern_arr.shape[0]
     
     for vec in found_max_coords:
-        draw.rectangle([(vec[1], vec[0]), (vec[1] - pattern_width, vec[0] - pattern_height)], outline="red")
-        draw.rectangle([(vec[1]+1, vec[0]+1), (vec[1] - pattern_width-1, vec[0] - pattern_height-1)], outline="red")
+        draw.rectangle([(vec[1], vec[0]), (vec[1] - pattern_width, vec[0] - pattern_height)], outline=outline)
+        draw.rectangle([(vec[1]+1, vec[0]+1), (vec[1] - pattern_width-1, vec[0] - pattern_height-1)], outline=outline)
 
-    original_img.save(out_file)
-
-print_dots("img/galia.png", "img/galia_e.png", "res.png")
-print_dots("img/school.jpg", "img/fish1.png", "res_rybki.png", inv=False, channels='r', threshold=0.25)
+    if out_file is not None:
+        original_img.save(out_file)
+    return len(found_max_coords), original_img
