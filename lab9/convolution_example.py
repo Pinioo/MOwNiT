@@ -5,7 +5,6 @@ import PIL.Image
 import PIL.ImageDraw
 from PIL.ImageOps import invert
 from skimage.feature import peak_local_max
-import cv2
 
 def convolute(im, pattern, plotting=False):
     img_dft = fft2(im)
