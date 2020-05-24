@@ -141,3 +141,5 @@ lab6/WikiCrawler/project
 lab6/SearchEngine/resources
 lab8/cits_hep
 lab8/cit-Patents.txt
+*/*.tex
+*/*.tex.swp

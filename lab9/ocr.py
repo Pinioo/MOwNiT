@@ -16,6 +16,13 @@ And by opposing end them. To die, to sleep,
 No more and by a sleep to say we end
 """
 
+ocr_wiki_text = """Optical character recognition or OCR is the electronic or
+mechanical conversion of images of typed, handwritten or
+printed text into machine text, whether from a scanned
+document, a photo of a document or from subtitle text
+superimposed on an image.
+"""
+
 def show_image(img):
     cv2.imshow("image", img)
     cv2.waitKey(0)
@@ -58,14 +65,14 @@ def load_font_files(font_name, letters=available_letters, digits=available_digit
 def find_character(img, pattern, threshold=0.95):
     convolution = convolute(img/255, pattern/255)
 
-    convolution_lows = convolution < threshold * max([np.max(convolution), 0.95*len(np.argwhere(pattern == 255))])
+    convolution_lows = convolution < threshold * max([np.max(convolution), threshold*len(np.argwhere(pattern == 255))])
 
     convolution[convolution_lows] = 0
     found_max_coords = peak_local_max(convolution)
 
     return found_max_coords
 
-def ocr(in_file, out_file, font_name="times", threshold=0.95):
+def ocr(in_file, out_file, font_name, threshold=0.95):
     img = cv2.imread(in_file, cv2.IMREAD_GRAYSCALE)
     original_img = img.copy()
 
