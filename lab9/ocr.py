@@ -60,13 +60,15 @@ def find_character(img, pattern, threshold=0.95):
 
     convolution_lows = convolution < threshold * max([np.max(convolution), 0.95*len(np.argwhere(pattern == 255))])
 
-    convolution[convulation_lows] = 0
+    convolution[convolution_lows] = 0
     found_max_coords = peak_local_max(convolution)
 
     return found_max_coords
 
 def ocr(in_file, out_file, font_name="times", threshold=0.95):
     img = cv2.imread(in_file, cv2.IMREAD_GRAYSCALE)
+    original_img = img.copy()
+
     character_files = load_font_files(font_name)
 
     translated_text = ""
@@ -135,4 +137,4 @@ def ocr(in_file, out_file, font_name="times", threshold=0.95):
         translated_text += "\n"
         y = lowest_y + 10
 
-    return translated_text, found_characters_cp
+    return original_img, translated_text, found_characters_cp
