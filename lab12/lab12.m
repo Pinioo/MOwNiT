@@ -28,13 +28,14 @@ simp3 = simpson(x,y3);
 [ns, errs3] = simp_comp(f3, x_min, x_max, 101);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+digits(10);
 f4_tiled = vpa(integral2(f4,0,1,0,@(x) 1-x, 'Method', 'tiled'));
 f4_iterated = vpa(integral2(f4,0,1,0,@(x) 1-x, 'Method', 'iterated'));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 xs = linspace(-3,3,100);
 ys = linspace(-5,5,100);
 
-[n, e] = trapz_acc(f5, 2000);
+[n, e] = trapz_acc(f5, 400, 5000);
 matlab_inacc = abs(680-integral2(f5, -3, 3, -5, 5))
 trapz_inacc = e(end)
 
@@ -44,32 +45,31 @@ function integ = simpson(x,y)
 end
 
 function [ns, errs] = simp_comp(f, x_min, x_max, n_max)
-    ns = [3:2:n_max];
-    errs = [];
+    ns = 3:2:n_max;
+    errs = zeros(1,length(ns));
     q = quad(f, x_min, x_max);
     diff = @(s) abs(q-s);
-    for n = ns
-        xs = linspace(x_min,x_max,n);
+    for i = 1:length(ns)
+        xs = linspace(x_min,x_max,ns(i));
         ys = f(xs);
         simp = simpson(xs, ys);
-        errs(end+1) = diff(simp);
+        errs(i) = diff(simp);
     end
 end
 
 function integ = trapzdbl(xs, ys, Z)
-    integ = cumtrapz(ys, cumtrapz(xs, Z, 2));
-    integ = integ(end, end);
+    integ = trapz(ys, trapz(xs, Z, 2));
 end
 
-function [ns, trs] = trapz_acc(f, n_max)
-    ns = [2:50:n_max];
-    trs = [];
+function [ns, trs] = trapz_acc(f, n_min, n_max)
+    ns = n_min:100:n_max;
+    trs = zeros(1,length(ns));
     diff = @(s) abs(680 - s);
-    for n = ns  
-        xs = linspace(-3, 3, n);
-        ys = linspace(-5, 5, n);
+    for i = 1:length(ns)  
+        xs = linspace(-3, 3, ns(i));
+        ys = linspace(-5, 5, ns(i));
         [X, Y] = meshgrid(xs, ys);
         Z = f(X, Y);
-        trs(end+1) = diff(trapzdbl(xs, ys, Z));
+        trs(i) = diff(trapzdbl(xs, ys, Z));
     end
 end
